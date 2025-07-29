@@ -1,34 +1,18 @@
-import express from "express";
-import cors from "cors";
-import pkg from "pg";
-
-const { Pool } = require("pg");
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: { rejectUnauthorized: false } // needed for Railway SSL
-});
-
+const express = require("express");
 const cors = require("cors");
-app.use(cors());
-
+const { Pool } = require("pg");
+require("dotenv").config();
 
 const app = express();
 app.use(cors());
-
-const { Pool } = require('pg');
+app.use(express.json());
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: {
-    rejectUnauthorized: false
-  }
+  ssl: { rejectUnauthorized: false }
 });
 
-module.exports = pool;
-
-
-
-// ✅ API Endpoint: Fetch all facilities with coordinates
+// ✅ API route
 app.get("/api/facilities", async (req, res) => {
   try {
     const result = await pool.query(`
@@ -44,5 +28,5 @@ app.get("/api/facilities", async (req, res) => {
   }
 });
 
-const PORT = 5000;
+const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`));
