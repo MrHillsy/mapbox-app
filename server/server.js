@@ -1,18 +1,19 @@
 const express = require("express");
 const cors = require("cors");
 const { Pool } = require("pg");
-require("dotenv").config();
+require("dotenv").config(); // For local development
 
 const app = express();
-app.use(cors());
-app.use(express.json());
+app.use(cors()); // Enable CORS for all origins
+app.use(express.json()); // Parse JSON bodies
 
+// ✅ PostgreSQL connection
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: { rejectUnauthorized: false }
+  ssl: { rejectUnauthorized: false } // Required for Railway SSL
 });
 
-// ✅ API route
+// ✅ API Endpoint: Fetch all facilities with coordinates
 app.get("/api/facilities", async (req, res) => {
   try {
     const result = await pool.query(`
@@ -28,5 +29,6 @@ app.get("/api/facilities", async (req, res) => {
   }
 });
 
+// ✅ Start the server
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`));
