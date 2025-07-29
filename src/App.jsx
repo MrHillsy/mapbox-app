@@ -3,11 +3,9 @@ import { BrowserRouter as Router, Routes, Route, NavLink } from "react-router-do
 import MapView from "./MapView";
 import Dashboard from "./Dashboard";
 
-
-
 export default function App() {
   return (
-    <Router>
+    <Router basename="/mapbox-app">
       <div className="h-screen flex flex-col">
         {/* Navbar */}
         <nav className="bg-blue-700 text-white p-4 flex justify-between items-center shadow">
@@ -36,8 +34,9 @@ export default function App() {
         {/* Main Content */}
         <main className="flex-1 bg-gray-50">
           <Routes>
-            <Route path="/" element={<MapView />} />
+            <Route index element={<MapView />} />
             <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="*" element={<MapView />} /> {/* Fallback */}
           </Routes>
         </main>
       </div>

@@ -23,12 +23,13 @@ export default function Dashboard() {
   const categories = ["School", "Hospital", "Bank", "Supermarket", "Police", "Park"];
   const [insights, setInsights] = useState([]);
 
-  useEffect(() => {
-    fetch("http://localhost:5000/api/facilities")
-      .then((res) => res.json())
-      .then((data) => setFacilities(data))
-      .catch((err) => console.error(err));
-  }, []);
+useEffect(() => {
+  fetch(`${import.meta.env.VITE_API_URL}/api/facilities`)
+    .then((res) => res.json())
+    .then((data) => setFacilities(data))
+    .catch((err) => console.error(err));
+}, []);
+
 
   const cityCounts = cities.map((city) => ({
     city,

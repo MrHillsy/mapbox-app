@@ -80,12 +80,13 @@ export default function MapView() {
   }, []);
 
   // Fetch facilities
-  useEffect(() => {
-    fetch("http://localhost:5000/api/facilities")
-      .then((res) => res.json())
-      .then((data) => setFacilities(data))
-      .catch((err) => console.error(err));
-  }, []);
+useEffect(() => {
+  fetch(`${import.meta.env.VITE_API_URL}/api/facilities`)
+    .then((res) => res.json())
+    .then((data) => setFacilities(data))
+    .catch((err) => console.error(err));
+}, []);
+
 
   // Add facility points
   useEffect(() => {
