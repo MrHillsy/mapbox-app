@@ -2,13 +2,17 @@ import fetch from "node-fetch";
 import pkg from "pg";
 const { Pool } = pkg;
 
+const { Pool } = require('pg');
+
 const pool = new Pool({
-  user: "postgres",          // Your Postgres username
-  host: "localhost",
-  database: "geoapp",        // Your database name
-  password: "11112228",  // Your Postgres password
-  port: 5432
+  connectionString: process.env.DATABASE_URL,
+  ssl: {
+    rejectUnauthorized: false
+  }
 });
+
+module.exports = pool;
+
 
 const cities = [
   { name: "New York", bbox: "40.700292,-74.019257,40.878178,-73.906158" },

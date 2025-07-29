@@ -7,13 +7,18 @@ const { Pool } = pkg;
 const app = express();
 app.use(cors());
 
+const { Pool } = require('pg');
+
 const pool = new Pool({
-  user: "postgres",
-  host: "localhost",
-  database: "geoapp",
-  password: "11112228", // Replace with your real password
-  port: 5432,
+  connectionString: process.env.DATABASE_URL,
+  ssl: {
+    rejectUnauthorized: false
+  }
 });
+
+module.exports = pool;
+
+
 
 // ✅ API Endpoint: Fetch all facilities with coordinates
 app.get("/api/facilities", async (req, res) => {
