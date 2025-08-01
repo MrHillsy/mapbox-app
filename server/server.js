@@ -4,7 +4,7 @@ import pkg from "pg";
 
 const { Pool } = pkg;
 const app = express();
-app.use(cors({ origin: 'https://mrhillsy.github.io' }));
+app.use(cors({ origin: 'https://mrhillsy.github.io/mapbox-app/' }));
 app.use(express.json());
 
 const pool = new Pool({
