@@ -4,8 +4,7 @@ import "mapbox-gl/dist/mapbox-gl.css";
 import "./map.css";
 import * as turf from "@turf/turf";
 
-mapboxgl.accessToken =
-  "pk.eyJ1Ijoia2F5Y2VlcHJhZyIsImEiOiJjbWRsNGcyeHcxNmZqMmxxM3hjOTM3bm12In0.yboxKqGeZF8p9TAbIeQWgw";
+mapboxgl.accessToken = "pk.eyJ1Ijoia2F5Y2VlcHJhZyIsImEiOiJjbWRsNGcyeHcxNmZqMmxxM3hjOTM3bm12In0.yboxKqGeZF8p9TAbIeQWgw";
 
 export default function MapView() {
   const mapContainer = useRef(null);
@@ -28,41 +27,11 @@ export default function MapView() {
   const [selectedCategories, setSelectedCategories] = useState(categories.map((c) => c.key));
   const [facilities, setFacilities] = useState([]);
   const [selectedFacility, setSelectedFacility] = useState(null);
-  const [showBoundaries, setShowBoundaries] = useState(false);
-
-  // Polygon coordinates for each city
-  const polygons = {
-    "New York": {
-      coords: [
-        [-74.05, 40.7],
-        [-73.95, 40.7],
-        [-73.95, 40.8],
-        [-74.05, 40.8],
-        [-74.05, 40.7],
-      ],
-      color: "#3b82f6",
-    },
-    Brooklyn: {
-      coords: [
-        [-73.99, 40.66],
-        [-73.9, 40.66],
-        [-73.9, 40.7],
-        [-73.99, 40.7],
-        [-73.99, 40.66],
-      ],
-      color: "#10b981",
-    },
-    Queens: {
-      coords: [
-        [-73.93, 40.73],
-        [-73.8, 40.73],
-        [-73.8, 40.8],
-        [-73.93, 40.8],
-        [-73.93, 40.73],
-      ],
-      color: "#f59e0b",
-    },
-  };
+  const [showPolygons, setShowPolygons] = useState({
+    "New York": false,
+    "Brooklyn": false,
+    "Queens": false
+  });
 
   // Initialize map
   useEffect(() => {
@@ -79,16 +48,15 @@ export default function MapView() {
     map.current.addControl(nav, "top-right");
   }, []);
 
-  // Fetch facilities
+  // Fetch Facilities
 useEffect(() => {
-  fetch(`${import.meta.env.VITE_API_URL}/api/facilities`)
+    fetch("http://localhost:5000/api/facilities")
     .then((res) => res.json())
     .then((data) => setFacilities(data))
     .catch((err) => console.error(err));
 }, []);
 
-
-  // Add facility points
+  // Add Facility Points and Click Event
   useEffect(() => {
     if (!map.current || !map.current.isStyleLoaded()) return;
 
@@ -121,7 +89,7 @@ useEffect(() => {
         },
       });
 
-      // Handle click
+      // ✅ Click Event for popup
       map.current.on("click", "facility-points", (e) => {
         const coordinates = e.features[0].geometry.coordinates.slice();
         const props = e.features[0].properties;
@@ -151,37 +119,63 @@ useEffect(() => {
     }
   }, [facilities, selectedCity, selectedCategories, selectedFacility]);
 
-  // ✅ Toggle Polygons
+  // ✅ Add polygons for each city dynamically
   useEffect(() => {
     if (!map.current) return;
 
-    Object.keys(polygons).forEach((city) => {
-      const sourceId = `boundary-${city}`;
-      const lineLayer = `boundary-line-${city}`;
-      const labelLayer = `boundary-label-${city}`;
+    const polygons = {
+      "New York": {
+        color: "#3b82f6",
+        coords: [[
+          [-74.05, 40.7], [-73.95, 40.7], [-73.95, 40.8], [-74.05, 40.8], [-74.05, 40.7]
+        ]]
+      },
+      "Brooklyn": {
+        color: "#10b981",
+        coords: [[
+          [-73.99, 40.66], [-73.9, 40.66], [-73.9, 40.7], [-73.99, 40.7], [-73.99, 40.66]
+        ]]
+      },
+      "Queens": {
+        color: "#f59e0b",
+        coords: [[
+          [-73.93, 40.73], [-73.8, 40.73], [-73.8, 40.8], [-73.93, 40.8], [-73.93, 40.73]
+        ]]
+      }
+    };
 
-      if (showBoundaries) {
+    Object.keys(polygons).forEach((city) => {
+      const sourceId = `${city}-boundary`;
+      const lineLayer = `${city}-line`;
+      const labelLayer = `${city}-label`;
+
+      if (showPolygons[city]) {
+        // Add source and layers if not exist
         if (!map.current.getSource(sourceId)) {
           map.current.addSource(sourceId, {
             type: "geojson",
             data: {
-              type: "Feature",
-              properties: { name: city },
-              geometry: { type: "Polygon", coordinates: [polygons[city].coords] },
+            type: "Feature",
+              geometry: {
+                type: "Polygon",
+                coordinates: [polygons[city].coords]
             },
+              properties: { name: city, color: polygons[city].color }
+            }
           });
 
-          map.current.addLayer({
+          // Add polygon line
+        map.current.addLayer({
             id: lineLayer,
-            type: "line",
+          type: "line",
             source: sourceId,
-            paint: {
+          paint: {
               "line-color": polygons[city].color,
-              "line-width": 3,
-            },
-            layout: { "line-join": "round", "line-cap": "round" },
-          }, "facility-points");
+              "line-width": 3
+            }
+          });
 
+          // Add label in the middle
           map.current.addLayer({
             id: labelLayer,
             type: "symbol",
@@ -189,36 +183,22 @@ useEffect(() => {
             layout: {
               "text-field": city,
               "text-size": 14,
-              "text-offset": [0, 1],
+              "text-offset": [0, 1.2],
+              "text-anchor": "top"
             },
-            paint: { "text-color": polygons[city].color },
-          });
-        }
-      } else {
+            paint: {
+              "text-color": "#111"
+            }
+        });
+      }
+    } else {
+        // Remove if unchecked
         if (map.current.getLayer(lineLayer)) map.current.removeLayer(lineLayer);
         if (map.current.getLayer(labelLayer)) map.current.removeLayer(labelLayer);
         if (map.current.getSource(sourceId)) map.current.removeSource(sourceId);
-      }
-    });
-  }, [showBoundaries]);
-
-  // Highlight selected point
-  useEffect(() => {
-    if (map.current && map.current.getLayer("facility-points")) {
-      map.current.setPaintProperty("facility-points", "circle-radius", [
-        "case",
-        ["==", ["get", "name"], selectedFacility?.name || ""],
-        12,
-        6,
-      ]);
-      map.current.setPaintProperty("facility-points", "circle-stroke-color", [
-        "case",
-        ["==", ["get", "name"], selectedFacility?.name || ""],
-        "#FFD700",
-        "#fff",
-      ]);
     }
-  }, [selectedFacility]);
+    });
+  }, [showPolygons]);
 
   const resetView = () => {
     map.current.flyTo({ center: initialView.center, zoom: initialView.zoom, speed: 0.8 });
@@ -254,7 +234,7 @@ useEffect(() => {
   };
 
   return (
-    <div style={{ display: "flex", height: "100%" }}>
+    <div style={{ display: "flex", height: "100vh" }}>
       {/* Sidebar */}
       <div className="w-64 bg-gray-100 p-4 overflow-y-auto">
         <h2 className="text-lg font-bold mb-4">Filters</h2>
@@ -275,7 +255,7 @@ useEffect(() => {
 
         {/* Category Filters */}
         <h3 className="font-semibold mb-2">Select Facilities</h3>
-        <div className="space-y-2">
+        <div className="space-y-2 mb-4">
           {categories.map((cat) => {
             const count = facilities.filter(
               (f) =>
@@ -301,19 +281,24 @@ useEffect(() => {
           })}
         </div>
 
-        {/* ✅ Toggle Boundaries */}
-        <div className="mt-4">
-          <label className="flex items-center space-x-2">
+        {/* ✅ Polygon Toggles */}
+        <h3 className="font-semibold mb-2">Show Area Boundaries</h3>
+        <div className="space-y-2 mb-4">
+          {Object.keys(showPolygons).map((city) => (
+            <label key={city} className="flex items-center space-x-2">
             <input
               type="checkbox"
-              checked={showBoundaries}
-              onChange={() => setShowBoundaries(!showBoundaries)}
+                checked={showPolygons[city]}
+                onChange={() =>
+                  setShowPolygons((prev) => ({ ...prev, [city]: !prev[city] }))
+                }
             />
-            <span className="font-medium">Show Area Boundaries</span>
+              <span>{city}</span>
           </label>
+          ))}
         </div>
 
-        {/* ✅ Reset View Button */}
+        {/* Reset Button */}
         <button
           onClick={resetView}
           className="mt-6 w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700"

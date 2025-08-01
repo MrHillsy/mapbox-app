@@ -1,18 +1,15 @@
 import fetch from "node-fetch";
 import pkg from "pg";
+import cors from "cors";
 const { Pool } = pkg;
 
-const { Pool } = require('pg');
-
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: {
-    rejectUnauthorized: false
-  }
+  user: "postgres",          // Your Postgres username
+  host: "localhost",
+  database: "geoapp",        // Your database name
+  password: "11112228",  // Your Postgres password
+  port: 5432
 });
-
-module.exports = pool;
-
 
 const cities = [
   { name: "New York", bbox: "40.700292,-74.019257,40.878178,-73.906158" },
@@ -85,5 +82,8 @@ const fetchAndInsert = async () => {
   console.log("🎯 Data loading complete!");
   await pool.end();
 };
+fetch("http://localhost:5000/api/facilities")
+  .then((res) => res.json())
+  .then((data) => console.log(data));
 
 fetchAndInsert().catch(err => console.error(err));
