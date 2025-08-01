@@ -4,7 +4,7 @@ import pkg from "pg";
 
 const { Pool } = pkg;
 const app = express();
-app.use(cors());
+app.use(cors({ origin: 'https://mrhillsy.github.io' }));
 app.use(express.json());
 
 const pool = new Pool({
@@ -117,3 +117,7 @@ app.listen(PORT, async () => {
   await createTable();
   await loadData();
 });
+fetch(`${import.meta.env.VITE_API_URL}/facilities`)
+  .then(res => res.json())
+  .then(data => console.log('API data:', data))
+  .catch(err => console.error('Fetch error:', err));
